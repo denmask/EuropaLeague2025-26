@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Europa League | Fase Campionato & Tabellone</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>🏆 UEFA EUROPA LEAGUE</h1>
+      <p>Fase Campionato • Percorso Knockout • Stagione 2024/25</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="classifica">📊 CLASSIFICA</button>
+      <button class="tab-btn" data-tab="tabellone">🗺️ TABELLONE FINALE</button>
+    </div>
+
+    <div id="classifica" class="panel active-panel">
+      <div class="table-wrapper">
+        <table class="league-table" id="standings-table">
+          <thead>
+            <tr><th>Pos</th><th>Squadra</th><th>G</th><th>V</th><th>N</th><th>P</th><th>GF</th><th>GS</th><th>DR</th><th>Pti</th><th>Forma</th></tr>
+          </thead>
+          <tbody id="standings-body"></tbody>
+        </table>
+      </div>
+      <div class="footnote">* Classifica ufficiale fase campionato – tie-break: differenza reti → gol segnati</div>
+    </div>
+
+    <div id="tabellone" class="panel">
+      <div class="bracket-container">
+        <div class="bracket" id="bracket-root"></div>
+      </div>
+      <div class="final-note">🎯 Finale: 20 maggio • Stadio de la Luz, Lisbona</div>
+    </div>
+  </div>
+  <script src="data.json"></script>
+  <script src="script.js"></script>
+</body>
+</html>
