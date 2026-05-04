@@ -1,8 +1,8 @@
-(function() {
+(function () {
   const data = window.EUROPA_DATA;
   const teamsMap = new Map(data.teams.map(t => [t.id, t]));
 
-  // Render classifica
+  /* ───────── STANDINGS ───────── */
   function renderStandings() {
     const tbody = document.getElementById('standings-body');
     if (!tbody) return;
@@ -10,12 +10,22 @@
     data.standings.forEach(entry => {
       const team = teamsMap.get(entry.teamId);
       if (!team) return;
-      const formHtml = entry.form.map(res => `<span class="form-dot form-${res === 'W' ? 'w' : (res === 'D' ? 'd' : 'l')}">${res === 'W' ? 'W' : (res === 'D' ? 'D' : 'L')}</span>`).join('');
+      const formHtml = entry.form.map(res =>
+        `<span class="form-dot form-${res === 'W' ? 'w' : res === 'D' ? 'd' : 'l'}">${res}</span>`
+      ).join('');
+      const dr = entry.gf - entry.gs;
+      const drStr = dr > 0 ? `+${dr}` : `${dr}`;
       const row = `<tr>
-        <td class="pos-highlight">${entry.pos}</td>
-        <td><div class="team-cell"><img class="team-logo" src="${team.logo}" alt="${team.name}" loading="lazy" onerror="this.src='https://placehold.co/30x30/1e2a2a/white?text=FC'"> ${team.name}</div></td>
+        <td class="pos-cell">${entry.pos}</td>
+        <td>
+          <div class="team-cell">
+            <img class="team-logo" src="${team.logo}" alt="${team.name}" loading="lazy"
+              onerror="this.onerror=null;this.src='https://placehold.co/28x28/1e2a2a/white?text=FC'">
+            <span>${team.name}</span>
+          </div>
+        </td>
         <td>${entry.g}</td><td>${entry.v}</td><td>${entry.n}</td><td>${entry.p}</td>
-        <td>${entry.gf}</td><td>${entry.gs}</td><td>${entry.gf - entry.gs}</td>
+        <td>${entry.gf}</td><td>${entry.gs}</td><td>${drStr}</td>
         <td><strong>${entry.pts}</strong></td>
         <td><div class="form-badge">${formHtml}</div></td>
       </tr>`;
@@ -23,69 +33,129 @@
     });
   }
 
-  function getTeamLogoByName(name) {
-    const found = data.teams.find(t => t.name === name || t.short === name);
-    if(found) return found.logo;
-    return "https://placehold.co/30x30/1e2a2a/white?text=FC";
+  /* ───────── BRACKET ───────── */
+  function getTeam(id, fallbackName) {
+    return teamsMap.get(id) || { name: fallbackName, logo: `https://placehold.co/28x28/1e2a2a/white?text=FC` };
+  }
+
+  function teamLine(team, legs, side) {
+    /* side: 'home' or 'away' */
+    const logoHtml = `<img class="bracket-logo" src="${team.logo}" alt="${team.name}"
+      onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">`;
+    const legScores = legs.map(l => {
+      const score = l.score || '?';
+      const parts = score.split('-');
+      let val = side === 'home' ? (parts[0] || '?') : (parts[1] || '?');
+      // handle extras like "1-1 (3-2 dcr)"
+      if (side === 'away' && parts[1]) val = parts[1];
+      const pending = score === '?';
+      return `<span class="leg-score ${pending ? 'leg-pending' : ''}" title="${l.label}">${val}</span>`;
+    }).join('');
+
+    return `<div class="team-line">
+      ${logoHtml}
+      <span class="team-name">${team.name}</span>
+      <div class="legs-scores">${legScores}</div>
+    </div>`;
+  }
+
+  function matchCard(m, showAggregate) {
+    const home = getTeam(m.homeLogoId, m.home);
+    const away = getTeam(m.awayLogoId, m.away);
+    const legs = m.legs || [];
+
+    const homeWon = m.winner && (m.winner === home.name || m.winner === m.home);
+    const awayWon = m.winner && (m.winner === away.name || m.winner === m.away);
+
+    let aggHtml = '';
+    if (showAggregate && m.aggregate) {
+      aggHtml = `<div class="agg-line">Aggregato: <strong>${m.aggregate}</strong>${m.winner ? ' · <span class="agg-winner">✓ ' + m.winner + '</span>' : ''}</div>`;
+    } else if (!m.aggregate && legs.length) {
+      // in progress
+      aggHtml = `<div class="agg-line agg-pending">⏳ In attesa del ritorno</div>`;
+    }
+
+    const legLabels = legs.map(l =>
+      `<span class="leg-label">${l.label}</span>`
+    ).join('');
+
+    return `<div class="match-card ${homeWon ? 'home-won' : ''} ${awayWon ? 'away-won' : ''}">
+      <div class="leg-header">${legLabels}</div>
+      <div class="match-teams">
+        ${teamLine(home, legs, 'home')}
+        ${teamLine(away, legs, 'away')}
+      </div>
+      ${aggHtml}
+    </div>`;
   }
 
   function renderBracket() {
     const bracketDiv = document.getElementById('bracket-root');
     if (!bracketDiv) return;
+
     const rounds = [
-      { title: "OTTAVI FINALE", matches: data.bracket.ottavi },
-      { title: "QUARTI FINALE", matches: data.bracket.quarti },
-      { title: "SEMIFINALI", matches: data.bracket.semifinali }
+      { key: 'ottavi',    title: 'OTTAVI FINALE',   showAgg: true },
+      { key: 'quarti',    title: 'QUARTI FINALE',    showAgg: true },
+      { key: 'semifinali',title: 'SEMIFINALI',       showAgg: false }
     ];
-    let html = `<div class="bracket">`;
-    rounds.forEach(round => {
-      html += `<div class="round"><div class="round-title">${round.title}</div>`;
-      round.matches.forEach(m => {
-        const homeTeam = data.teams.find(t => t.id === m.homeLogoId) || { name: m.home, logo: getTeamLogoByName(m.home) };
-        const awayTeam = data.teams.find(t => t.id === m.awayLogoId) || { name: m.away, logo: getTeamLogoByName(m.away) };
-        html += `
-          <div class="match-card">
-            <div class="match-teams">
-              <div class="team-line"><img src="${homeTeam.logo}" onerror="this.src='https://placehold.co/24x24/1e2a2a/white?text=?'"> ${homeTeam.name} <span class="match-score">${m.score.split(' ')[0]}</span></div>
-              <div class="team-line"><img src="${awayTeam.logo}" onerror="this.src='https://placehold.co/24x24/1e2a2a/white?text=?'"> ${awayTeam.name} <span class="match-score">${m.score.includes('dcr') ? m.score.split(' ')[0] : m.score.split(' ')[0]}</span></div>
-            </div>
-          </div>`;
+
+    let html = '';
+    rounds.forEach(r => {
+      const matches = data.bracket[r.key] || [];
+      html += `<div class="round">
+        <div class="round-title">${r.title}</div>`;
+      matches.forEach(m => {
+        html += matchCard(m, r.showAgg);
       });
       html += `</div>`;
     });
-    // finale extra
-    const finale = data.bracket.finale;
-    const finalHome = data.teams.find(t => t.id === finale.homeLogoId) || { name: finale.home, logo: getTeamLogoByName(finale.home) };
-    const finalAway = data.teams.find(t => t.id === finale.awayLogoId) || { name: finale.away, logo: getTeamLogoByName(finale.away) };
-    html += `<div class="round"><div class="round-title">🏆 FINALE (20 Mag)</div>
-      <div class="match-card">
+
+    // Finale
+    const f = data.bracket.finale;
+    const finalHome = f.homeLogoId ? getTeam(f.homeLogoId, f.home) : { name: 'TBD', logo: '' };
+    const finalAway = f.awayLogoId ? getTeam(f.awayLogoId, f.away) : { name: 'TBD', logo: '' };
+
+    html += `<div class="round finale-round">
+      <div class="round-title finale-title">🏆 FINALE · 20 Mag</div>
+      <div class="match-card finale-card">
         <div class="match-teams">
-          <div class="team-line"><img src="${finalHome.logo}" onerror="this.src='https://placehold.co/24x24/1e2a2a/white?text=?'"> ${finalHome.name} <span class="match-score">vs</span></div>
-          <div class="team-line"><img src="${finalAway.logo}" onerror="this.src='https://placehold.co/24x24/1e2a2a/white?text=?'"> ${finalAway.name} <span class="match-score">•</span></div>
+          <div class="team-line">
+            ${finalHome.logo ? `<img class="bracket-logo" src="${finalHome.logo}" alt="${finalHome.name}" onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">` : '<span class="tbd-icon">🏆</span>'}
+            <span class="team-name">${finalHome.name}</span>
+          </div>
+          <div class="vs-label">VS</div>
+          <div class="team-line">
+            ${finalAway.logo ? `<img class="bracket-logo" src="${finalAway.logo}" alt="${finalAway.name}" onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">` : '<span class="tbd-icon">🏆</span>'}
+            <span class="team-name">${finalAway.name}</span>
+          </div>
         </div>
+        <div class="agg-line agg-pending">📍 Stadio de la Luz, Lisbona</div>
       </div>
-    </div></div>`;
+    </div>`;
+
     bracketDiv.innerHTML = html;
   }
 
-  // tabs
+  /* ───────── TABS ───────── */
   function initTabs() {
     const btns = document.querySelectorAll('.tab-btn');
-    const panels = { classifica: document.getElementById('classifica'), tabellone: document.getElementById('tabellone') };
+    const panels = {
+      classifica: document.getElementById('classifica'),
+      tabellone: document.getElementById('tabellone')
+    };
     btns.forEach(btn => {
       btn.addEventListener('click', () => {
         const tabId = btn.getAttribute('data-tab');
         if (!tabId) return;
         btns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        Object.values(panels).forEach(p => p.classList.remove('active-panel'));
-        if (tabId === 'classifica') panels.classifica.classList.add('active-panel');
-        if (tabId === 'tabellone') panels.tabellone.classList.add('active-panel');
-        if (tabId === 'tabellone' && document.getElementById('bracket-root').innerHTML === '') renderBracket();
+        Object.values(panels).forEach(p => p && p.classList.remove('active-panel'));
+        if (panels[tabId]) panels[tabId].classList.add('active-panel');
       });
     });
     renderStandings();
     renderBracket();
   }
+
   initTabs();
 })();
