@@ -194,23 +194,23 @@ const EUROPA_DATA = {
         homeLogoId: 6, awayLogoId: 7,
         legs: [
           { label: "Andata", score: "2-1" },
-          { label: "Ritorno", score: "?" }
+          { label: "Ritorno", score: "1-3" }
         ],
-        aggregate: null, winner: null
+        aggregate: 3-4, winner: "Freiburg"
       },
       {
         home: "Nott'm Forest", away: "Aston Villa",
         homeLogoId: 13, awayLogoId: 2,
         legs: [
           { label: "Andata", score: "1-0" },
-          { label: "Ritorno", score: "?" }
+          { label: "Ritorno", score: "0-4" }
         ],
-        aggregate: null, winner: null
+        aggregate: 1-4, winner: "Aston Villa"
       }
     ],
     "finale": {
-      home: "TBD", away: "TBD",
-      homeLogoId: null, awayLogoId: null,
+      home: "Freiburg", away: "Aston Villa",
+      homeLogoId: 7, awayLogoId: 2,
       winner: null
     }
   }
