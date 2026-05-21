@@ -59,7 +59,7 @@
     </div>`;
   }
 
-  function matchCard(m, showAggregate) {
+  function matchCard(m, showAggregate, extraClass = '') {
     const home = getTeam(m.homeLogoId, m.home);
     const away = getTeam(m.awayLogoId, m.away);
     const legs = m.legs || [];
@@ -70,6 +70,8 @@
     let aggHtml = '';
     if (showAggregate && m.aggregate) {
       aggHtml = `<div class="agg-line">Aggregato: <strong>${m.aggregate}</strong>${m.winner ? ' · <span class="agg-winner">✓ ' + m.winner + '</span>' : ''}</div>`;
+    } else if (m.winner && !m.aggregate) {
+      aggHtml = `<div class="agg-line"><span class="agg-winner">🏆 ${m.winner}</span></div>`;
     } else if (!m.aggregate && legs.length) {
       // in progress
       aggHtml = `<div class="agg-line agg-pending">⏳ In attesa del ritorno</div>`;
@@ -79,7 +81,7 @@
       `<span class="leg-label">${l.label}</span>`
     ).join('');
 
-    return `<div class="match-card ${homeWon ? 'home-won' : ''} ${awayWon ? 'away-won' : ''}">
+    return `<div class="match-card ${extraClass} ${homeWon ? 'home-won' : ''} ${awayWon ? 'away-won' : ''}">
       <div class="leg-header">${legLabels}</div>
       <div class="match-teams">
         ${teamLine(home, legs, 'home')}
@@ -112,25 +114,10 @@
 
     // Finale
     const f = data.bracket.finale;
-    const finalHome = f.homeLogoId ? getTeam(f.homeLogoId, f.home) : { name: 'TBD', logo: '' };
-    const finalAway = f.awayLogoId ? getTeam(f.awayLogoId, f.away) : { name: 'TBD', logo: '' };
-
     html += `<div class="round finale-round">
       <div class="round-title finale-title">🏆 FINALE · 20 Mag</div>
-      <div class="match-card finale-card">
-        <div class="match-teams">
-          <div class="team-line">
-            ${finalHome.logo ? `<img class="bracket-logo" src="${finalHome.logo}" alt="${finalHome.name}" onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">` : '<span class="tbd-icon">🏆</span>'}
-            <span class="team-name">${finalHome.name}</span>
-          </div>
-          <div class="vs-label">VS</div>
-          <div class="team-line">
-            ${finalAway.logo ? `<img class="bracket-logo" src="${finalAway.logo}" alt="${finalAway.name}" onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">` : '<span class="tbd-icon">🏆</span>'}
-            <span class="team-name">${finalAway.name}</span>
-          </div>
-        </div>
-        <div class="agg-line agg-pending">📍 Stadio de la Luz, Lisbona</div>
-      </div>
+      ${matchCard(f, false, 'finale-card')}
+      <div class="agg-line" style="margin-top:0.75rem;">📍 Stadio de la Luz, Lisbona</div>
     </div>`;
 
     bracketDiv.innerHTML = html;
