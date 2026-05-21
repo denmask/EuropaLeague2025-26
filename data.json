@@ -212,10 +212,10 @@ const EUROPA_DATA = {
       home: "Freiburg", away: "Aston Villa",
       homeLogoId: 7, awayLogoId: 2,
       legs: [
-        { label: "Andata", score: "0-3" },
-        { label: "Ritorno", score: "0-0"}
+        { label: "Unica", score: "0-3" },
+        { label: ""}
       ],
-      aggregate: "0-3", winner: "Aston Villa"
+      winner: "Aston Villa"
     }
   }
 };
