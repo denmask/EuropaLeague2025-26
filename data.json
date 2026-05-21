@@ -196,7 +196,7 @@ const EUROPA_DATA = {
           { label: "Andata", score: "2-1" },
           { label: "Ritorno", score: "1-3" }
         ],
-        aggregate: 3-4, winner: "Freiburg"
+        aggregate: "3-4", winner: "Freiburg"
       },
       {
         home: "Nott'm Forest", away: "Aston Villa",
@@ -205,13 +205,17 @@ const EUROPA_DATA = {
           { label: "Andata", score: "1-0" },
           { label: "Ritorno", score: "0-4" }
         ],
-        aggregate: 1-4, winner: "Aston Villa"
+        aggregate: "1-4", winner: "Aston Villa"
       }
     ],
     "finale": {
       home: "Freiburg", away: "Aston Villa",
       homeLogoId: 7, awayLogoId: 2,
-      winner: null
+      legs: [
+        { label: "Andata", score: "0-3" },
+        { label: "Ritorno", score: "0-0"}
+      ],
+      aggregate: "0-3", winner: "Aston Villa"
     }
   }
 };
