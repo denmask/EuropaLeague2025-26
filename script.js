@@ -162,7 +162,7 @@
           onerror="this.onerror=null;this.src='https://placehold.co/80x80/1e2a2a/white?text=FC'">
         <div class="champion-label">CAMPIONE</div>
         <div class="champion-name">${f.winner}</div>
-        <div class="champion-subtitle">UEFA Europa League 2024/25</div>
+        <div class="champion-subtitle">UEFA Europa League 2025/26</div>
         <div class="champion-stars">★ ★ ★</div>
       </div>
     `;
