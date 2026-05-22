@@ -38,19 +38,31 @@
     return teamsMap.get(id) || { name: fallbackName, logo: `https://placehold.co/28x28/1e2a2a/white?text=FC` };
   }
 
+  function calcAggregate(legs) {
+    let homeTotal = 0, awayTotal = 0;
+    legs.forEach(l => {
+      if (!l.score || l.score === '?') return;
+      // handle "2-1 (3-0 dcr)" style — take the main score only
+      const main = l.score.split('(')[0].trim();
+      const parts = main.split('-');
+      homeTotal += parseInt(parts[0]) || 0;
+      awayTotal += parseInt(parts[1]) || 0;
+    });
+    return `${homeTotal}-${awayTotal}`;
+  }
+
   function teamLine(team, legs, side) {
-    /* side: 'home' or 'away' */
     const logoHtml = `<img class="bracket-logo" src="${team.logo}" alt="${team.name}"
       onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">`;
-    const legScores = legs.map(l => {
-      const score = l.score || '?';
-      const parts = score.split('-');
-      let val = side === 'home' ? (parts[0] || '?') : (parts[1] || '?');
-      // handle extras like "1-1 (3-2 dcr)"
-      if (side === 'away' && parts[1]) val = parts[1];
-      const pending = score === '?';
-      return `<span class="leg-score ${pending ? 'leg-pending' : ''}" title="${l.label}">${val}</span>`;
-    }).join('');
+    const legScores = legs
+      .filter(l => l.score && l.score.trim() !== '' && l.score !== '?')
+      .map(l => {
+        const score = l.score;
+        const parts = score.split('-');
+        let val = side === 'home' ? (parts[0] || '?') : (parts[1] || '?');
+        if (side === 'away' && parts[1]) val = parts[1];
+        return `<span class="leg-score" title="${l.label}">${val}</span>`;
+      }).join('');
 
     return `<div class="team-line">
       ${logoHtml}
@@ -67,19 +79,25 @@
     const homeWon = m.winner && (m.winner === home.name || m.winner === m.home);
     const awayWon = m.winner && (m.winner === away.name || m.winner === m.away);
 
+    // Compute aggregate if not provided but we have 2 legs
+    let agg = m.aggregate;
+    if (!agg && legs.length >= 2) {
+      agg = calcAggregate(legs);
+    }
+
     let aggHtml = '';
-    if (showAggregate && m.aggregate) {
-      aggHtml = `<div class="agg-line">Aggregato: <strong>${m.aggregate}</strong>${m.winner ? ' · <span class="agg-winner">✓ ' + m.winner + '</span>' : ''}</div>`;
-    } else if (m.winner && !m.aggregate) {
+    if (showAggregate && agg) {
+      aggHtml = `<div class="agg-line">Aggregato: <strong>${agg}</strong>${m.winner ? ' · <span class="agg-winner">✓ ' + m.winner + '</span>' : ''}</div>`;
+    } else if (m.winner && !agg) {
       aggHtml = `<div class="agg-line"><span class="agg-winner">🏆 ${m.winner}</span></div>`;
-    } else if (!m.aggregate && legs.length) {
-      // in progress
+    } else if (!agg && legs.length) {
       aggHtml = `<div class="agg-line agg-pending">⏳ In attesa del ritorno</div>`;
     }
 
-    const legLabels = legs.map(l =>
-      `<span class="leg-label">${l.label}</span>`
-    ).join('');
+    const legLabels = legs
+      .filter(l => l.label && l.label.trim() !== '' && l.score && l.score.trim() !== '')
+      .map(l => `<span class="leg-label">${l.label}</span>`)
+      .join('');
 
     return `<div class="match-card ${extraClass} ${homeWon ? 'home-won' : ''} ${awayWon ? 'away-won' : ''}">
       <div class="leg-header">${legLabels}</div>
@@ -96,9 +114,9 @@
     if (!bracketDiv) return;
 
     const rounds = [
-      { key: 'ottavi',    title: 'OTTAVI FINALE',   showAgg: true },
-      { key: 'quarti',    title: 'QUARTI FINALE',    showAgg: true },
-      { key: 'semifinali',title: 'SEMIFINALI',       showAgg: false }
+      { key: 'ottavi',     title: 'OTTAVI FINALE',  showAgg: true },
+      { key: 'quarti',     title: 'QUARTI FINALE',  showAgg: true },
+      { key: 'semifinali', title: 'SEMIFINALI',     showAgg: true }
     ];
 
     let html = '';
@@ -121,6 +139,34 @@
     </div>`;
 
     bracketDiv.innerHTML = html;
+
+    // Render champion banner
+    renderChampion();
+  }
+
+  function renderChampion() {
+    const f = data.bracket.finale;
+    if (!f || !f.winner) return;
+    const winnerTeam = teamsMap.get(f.awayLogoId) || teamsMap.get(f.homeLogoId);
+    // Find winner team by name
+    const winnerObj = data.teams.find(t => t.name === f.winner || t.short === f.winner);
+    const logoSrc = winnerObj ? winnerObj.logo : 'https://placehold.co/80x80/1e2a2a/white?text=FC';
+
+    const banner = document.getElementById('champion-banner');
+    if (!banner) return;
+    banner.innerHTML = `
+      <div class="champion-inner">
+        <div class="champion-stars">★ ★ ★</div>
+        <div class="champion-trophy">🏆</div>
+        <img class="champion-logo" src="${logoSrc}" alt="${f.winner}"
+          onerror="this.onerror=null;this.src='https://placehold.co/80x80/1e2a2a/white?text=FC'">
+        <div class="champion-label">CAMPIONE</div>
+        <div class="champion-name">${f.winner}</div>
+        <div class="champion-subtitle">UEFA Europa League 2024/25</div>
+        <div class="champion-stars">★ ★ ★</div>
+      </div>
+    `;
+    banner.style.display = 'block';
   }
 
   /* ───────── TABS ───────── */
