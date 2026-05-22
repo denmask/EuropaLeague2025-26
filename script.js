@@ -54,14 +54,15 @@
   function teamLine(team, legs, side) {
     const logoHtml = `<img class="bracket-logo" src="${team.logo}" alt="${team.name}"
       onerror="this.onerror=null;this.src='https://placehold.co/24x24/1e2a2a/white?text=FC'">`;
-    const legScores = legs.map(l => {
-      const score = l.score || '?';
-      const parts = score.split('-');
-      let val = side === 'home' ? (parts[0] || '?') : (parts[1] || '?');
-      if (side === 'away' && parts[1]) val = parts[1];
-      const pending = score === '?';
-      return `<span class="leg-score ${pending ? 'leg-pending' : ''}" title="${l.label}">${val}</span>`;
-    }).join('');
+    const legScores = legs
+      .filter(l => l.score && l.score.trim() !== '' && l.score !== '?')
+      .map(l => {
+        const score = l.score;
+        const parts = score.split('-');
+        let val = side === 'home' ? (parts[0] || '?') : (parts[1] || '?');
+        if (side === 'away' && parts[1]) val = parts[1];
+        return `<span class="leg-score" title="${l.label}">${val}</span>`;
+      }).join('');
 
     return `<div class="team-line">
       ${logoHtml}
@@ -93,9 +94,10 @@
       aggHtml = `<div class="agg-line agg-pending">⏳ In attesa del ritorno</div>`;
     }
 
-    const legLabels = legs.map(l =>
-      `<span class="leg-label">${l.label}</span>`
-    ).join('');
+    const legLabels = legs
+      .filter(l => l.label && l.label.trim() !== '' && l.score && l.score.trim() !== '')
+      .map(l => `<span class="leg-label">${l.label}</span>`)
+      .join('');
 
     return `<div class="match-card ${extraClass} ${homeWon ? 'home-won' : ''} ${awayWon ? 'away-won' : ''}">
       <div class="leg-header">${legLabels}</div>
