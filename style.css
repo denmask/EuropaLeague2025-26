@@ -386,3 +386,73 @@ body {
   .bracket-logo { width: 18px; height: 18px; }
   .agg-line { font-size: 0.62rem; }
 }
+/* ── CHAMPION BANNER ── */
+.champion-banner {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+.champion-inner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #1a0a00, #2a1200, #1a0a00);
+  border: 2px solid #FFD700;
+  border-radius: 32px;
+  padding: 2rem 3rem;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.25), 0 0 120px rgba(255, 102, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.champion-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(255,215,0,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.champion-stars {
+  color: #FFD700;
+  font-size: 1.2rem;
+  letter-spacing: 8px;
+}
+.champion-trophy {
+  font-size: 3rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(255,215,0,0.6));
+}
+.champion-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.8));
+}
+.champion-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #FFD700;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+.champion-name {
+  font-size: 2.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FFD700, #FF9933, #FFD700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.champion-subtitle {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .champion-inner { padding: 1.5rem 1.5rem; }
+  .champion-name  { font-size: 2rem; }
+  .champion-logo  { width: 60px; height: 60px; }
+}
